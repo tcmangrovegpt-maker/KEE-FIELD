@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0c3b35">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>KEE FIELD (ROK--Contractors) | Mangrove Project &amp; Payment Tracking System</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="hero">
+      <p class="eyebrow">Mangrove Project &amp; Payment Tracking System</p>
+      <h1>KEE FIELD (ROK--Contractors)</h1>
+      <p class="updated">ข้อมูล ณ วันที่ <span id="updated"></span></p>
+      <label class="search-wrap" for="search">
+        <span aria-hidden="true">⌕</span>
+        <input id="search" type="search" autocomplete="off" placeholder="ค้นหาเลขที่แปลง เช่น 22-VSD">
+      </label>
+      <div class="filters" aria-label="ตัวกรองข้อมูล">
+        <button class="filter active" data-program="all">ทั้งหมด</button>
+        <button class="filter" data-program="STC">STC</button>
+        <button class="filter" data-program="VSD">VSD</button>
+      </div>
+      <div class="select-filters" aria-label="ตัวกรองเพิ่มเติม">
+        <label><span>ปีงาน</span><select id="year-filter"><option value="all">ทุกปี</option><option value="1">ปีที่ 1 (แปลงปี 66)</option><option value="2">ปีที่ 2</option><option value="3">ปีที่ 3</option></select></label>
+        <label><span>จังหวัด</span><select id="province-filter"><option value="all">ทุกจังหวัด</option></select></label>
+        <label><span>เจ้าหน้าที่</span><select id="officer-filter"><option value="all">ทุกเจ้าหน้าที่</option></select></label>
+        <label><span>สถานะงาน</span><select id="progress-filter"><option value="all">ทุกสถานะ</option><option value="complete">แล้วเสร็จ 100%</option><option value="progress">กำลังดำเนินการ</option><option value="not-started">ยังไม่เริ่ม</option></select></label>
+      </div>
+    </header>
+
+    <section class="content" aria-label="รายการแปลง">
+      <div class="list-head"><span id="count"></span><span>แตะที่แปลงเพื่อดูสถานะ</span></div>
+      <div id="list" class="plot-list"></div>
+    </section>
+  </main>
+
+  <div id="sheet" class="sheet-backdrop" hidden>
+    <section class="detail-sheet" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+      <div class="sheet-grip"></div>
+      <button id="close" class="close" aria-label="ปิด">×</button>
+      <div id="detail"></div>
+    </section>
+  </div>
+  <script src="payload-loader.js"></script>
+</body>
+</html>
