@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -21,34 +21,53 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Setup Pages
         uses: actions/configure-pages@v6
 
-      - name: Restore original site files
+      - name: Restore exact original application files
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .original/appjs.* | base64 -d > app.js
+          cat .original/styles.* | base64 -d > styles.css
+          cat data/app-part-*.b64 | base64 -d | gzip -d > app-data.js
+
+      - name: Verify files against uploaded ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sha256sum index.html | cut -d' ' -f1)" = "4c8e7bc0209ca2391afe892b7f6b0dee602659b3d9a8f99ac7f363c0013bf538"
+          test "$(sha256sum app.js | cut -d' ' -f1)" = "512d6c0e70132faf7b16667840e3f1159563d264249d2c1904a0ee704434acac"
+          test "$(sha256sum styles.css | cut -d' ' -f1)" = "c8e0e01e7f28db9d19b64e3df2cd3be23ac1fce50127dcd55ed604de9c5052b4"
+          test "$(sha256sum app-data.js | cut -d' ' -f1)" = "dab4883475de33e62a427f004b86c2db6b661b7e1fd3a288f383a6c503c7f464"
+          test "$(sha256sum manifest.webmanifest | cut -d' ' -f1)" = "677579ab8b1413bd962fc1560ac9bfef64ada9b325ab86a10ecf2369c7cbf0ce"
+          test "$(sha256sum service-worker.js | cut -d' ' -f1)" = "556e85ba1cc2d6ea429c1c00a920118129fad84fcf78b4140e441a02ca635f6c"
+          grep -q '"records"' app-data.js
+          grep -q '1-STC' app-data.js
+
+      - name: Keep original runtime files on main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app.js styles.css app-data.js index.html manifest.webmanifest service-worker.js
+          if ! git diff --cached --quiet; then
+            git commit -m "Restore original KEE FIELD runtime files [skip ci]"
+            git push origin HEAD:main
+          fi
+
+      - name: Prepare Pages artifact
         shell: bash
         run: |
           set -euo pipefail
           rm -rf _site
           mkdir -p _site
-          cp index.html _site/index.html
-          cat .original/appjs.* | base64 -d > _site/app.js
-          cat .original/styles.* | base64 -d > _site/styles.css
-          cat data/app-part-*.b64 | base64 -d | gzip -d > _site/app-data.js
-          cp manifest.webmanifest _site/manifest.webmanifest
-          cp service-worker.js _site/service-worker.js
+          cp index.html app.js styles.css app-data.js manifest.webmanifest service-worker.js _site/
           if [ -d kmz ]; then cp -R kmz _site/kmz; fi
-
-      - name: Verify exact original files
-        shell: bash
-        run: |
-          set -euo pipefail
-          test "$(sha256sum _site/index.html | cut -d' ' -f1)" = "4c8e7bc0209ca2391afe892b7f6b0dee602659b3d9a8f99ac7f363c0013bf538"
-          test "$(sha256sum _site/app.js | cut -d' ' -f1)" = "512d6c0e70132faf7b16667840e3f1159563d264249d2c1904a0ee704434acac"
-          test "$(sha256sum _site/styles.css | cut -d' ' -f1)" = "c8e0e01e7f28db9d19b64e3df2cd3be23ac1fce50127dcd55ed604de9c5052b4"
-          test "$(sha256sum _site/app-data.js | cut -d' ' -f1)" = "dab4883475de33e62a427f004b86c2db6b661b7e1fd3a288f383a6c503c7f464"
-          test "$(sha256sum _site/manifest.webmanifest | cut -d' ' -f1)" = "677579ab8b1413bd962fc1560ac9bfef64ada9b325ab86a10ecf2369c7cbf0ce"
-          test "$(sha256sum _site/service-worker.js | cut -d' ' -f1)" = "556e85ba1cc2d6ea429c1c00a920118129fad84fcf78b4140e441a02ca635f6c"
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v5
